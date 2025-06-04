@@ -5,140 +5,185 @@
                 Video Transcription
             </h1>
 
-            <!-- Main content area -->
-            <div class="space-y-6">
-                <!-- Top row: Upload and Transcript -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Video Upload Card -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="p-4 border-b border-gray-200">
-                            <h2 class="text-lg font-semibold">Upload Video</h2>
-                        </div>
-                        <div class="p-4">
-                            <div
-                                @drop="handleDrop"
-                                @dragover.prevent
-                                @dragenter.prevent="isDragging = true"
-                                @dragleave.prevent="isDragging = false"
-                                @click="openFileDialog"
-                                class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
-                                :class="{
-                                    'border-blue-500 bg-blue-50': isDragging,
-                                }"
-                            >
-                                <input
-                                    ref="fileInput"
-                                    type="file"
-                                    accept="video/*"
-                                    @change="handleFileSelect"
-                                    class="hidden"
-                                />
-                                <div v-if="!videoFile" class="space-y-3">
-                                    <svg
-                                        class="mx-auto h-12 w-12 text-gray-400"
-                                        stroke="currentColor"
-                                        fill="none"
-                                        viewBox="0 0 48 48"
-                                    >
-                                        <path
-                                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                    <p class="text-base text-gray-600">
-                                        Drag and drop your video file here
-                                    </p>
-                                    <p class="text-sm text-gray-500">
-                                        or click to browse
-                                    </p>
-                                    <p class="text-sm text-gray-500">
-                                        Supported formats: MP4, MOV, AVI, WebM
-                                    </p>
-                                </div>
-
-                                <div v-else class="space-y-3">
-                                    <p class="text-base text-gray-700 font-medium break-all">
-                                        {{ videoFile.name }}
-                                    </p>
-                                    <p class="text-sm text-gray-500">
-                                        {{ formatFileSize(videoFile.size) }}
-                                    </p>
-                                    <button
-                                        @click.stop="removeVideo"
-                                        class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div v-if="videoFile" class="mt-4">
-                                <button
-                                    @click="transcribeVideo"
-                                    :disabled="isTranscribing"
-                                    class="w-full px-4 py-2 text-white rounded-md transition-colors"
-                                    :class="isTranscribing ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800'"
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                <!-- Video Upload Column -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Upload Video</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div
+                            @drop="handleDrop"
+                            @dragover.prevent
+                            @dragenter.prevent="isDragging = true"
+                            @dragleave.prevent="isDragging = false"
+                            @click="openFileDialog"
+                            class="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+                            :class="{
+                                'border-blue-500 bg-blue-50': isDragging,
+                            }"
+                        >
+                            <input
+                                ref="fileInput"
+                                type="file"
+                                accept="video/*"
+                                @change="handleFileSelect"
+                                class="hidden"
+                            />
+                            <div v-if="!videoFile" class="space-y-4">
+                                <svg
+                                    class="mx-auto h-12 w-12 text-gray-400"
+                                    stroke="currentColor"
+                                    fill="none"
+                                    viewBox="0 0 48 48"
                                 >
-                                    <span v-if="isTranscribing" class="flex items-center justify-center">
-                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Transcribing...
-                                    </span>
-                                    <span v-else>Transcribe Video</span>
-                                </button>
+                                    <path
+                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                                <p class="text-sm sm:text-base text-gray-600">
+                                    Drag and drop your video file here
+                                </p>
+                                <p class="text-xs sm:text-sm text-gray-500">
+                                    or click to browse
+                                </p>
+                                <p class="text-xs sm:text-sm text-gray-500">
+                                    Supported formats: MP4, MOV, AVI, WebM
+                                </p>
+                            </div>
+
+                            <div v-else class="space-y-4">
+                                <p class="text-sm sm:text-base text-gray-700 font-medium break-all">
+                                    {{ videoFile.name }}
+                                </p>
+                                <p class="text-xs sm:text-sm text-gray-500">
+                                    {{ formatFileSize(videoFile.size) }}
+                                </p>
+                                <Button
+                                    @click.stop="removeVideo"
+                                    variant="outline"
+                                    size="sm"
+                                    class="border-gray-300 hover:bg-gray-100"
+                                >
+                                    Remove
+                                </Button>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Transcript Card -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="p-4 border-b border-gray-200">
-                            <div class="flex justify-between items-center">
-                                <h2 class="text-lg font-semibold">Transcript</h2>
+                        <div v-if="videoFile" class="mt-6">
+                            <Button
+                                @click="transcribeVideo"
+                                :disabled="isTranscribing"
+                                variant="default"
+                                class="w-full inline-flex items-center justify-center"
+                                :class="isTranscribing ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-gray-900 text-white hover:bg-gray-800'"
+                            >
+                                <svg
+                                    v-if="isTranscribing"
+                                    class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    ></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                {{
+                                    isTranscribing
+                                        ? 'Transcribing...'
+                                        : 'Transcribe Video'
+                                }}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Transcript Output Column -->
+                <Card class="h-fit lg:h-auto">
+                    <CardHeader>
+                        <CardTitle>
+                            <div class="flex justify-between items-center flex-wrap gap-2">
+                                <span>Transcript</span>
                                 <div v-if="selectedTranscription" class="flex items-center gap-2">
-                                    <span class="text-sm text-gray-500">
+                                    <span class="text-sm font-normal text-gray-500 truncate max-w-[200px]">
                                         {{ formatDate(selectedTranscription.createdAt) }}
                                     </span>
-                                    <button
+                                    <Button
                                         @click="clearSelection"
-                                        class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                                        variant="outline"
+                                        size="sm"
+                                        class="h-6 px-2 text-xs"
                                     >
                                         Clear
-                                    </button>
+                                    </Button>
                                 </div>
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent class="overflow-hidden">
+                        <div
+                            v-if="!transcript && !isTranscribing"
+                            class="text-sm sm:text-base text-gray-500 text-center py-6 sm:py-8"
+                        >
+                            No transcript yet. Upload a video and click
+                            "Transcribe Video" to generate.
+                        </div>
+
+                        <div
+                            v-else-if="isTranscribing"
+                            class="text-center py-6 sm:py-8"
+                        >
+                            <div class="inline-flex items-center space-x-2">
+                                <svg
+                                    class="animate-spin h-5 w-5 text-gray-600"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    ></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                <span class="text-sm sm:text-base text-gray-600"
+                                    >Processing video...</span
+                                >
                             </div>
                         </div>
-                        <div class="p-4">
-                            <div
-                                v-if="!transcript && !isTranscribing && !selectedTranscription"
-                                class="text-gray-500 text-center py-8"
-                            >
-                                No transcript yet. Upload a video and click "Transcribe Video" to generate.
-                            </div>
 
-                            <div
-                                v-else-if="isTranscribing"
-                                class="text-center py-8"
-                            >
-                                <div class="inline-flex items-center space-x-2">
-                                    <svg class="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span class="text-gray-600">Processing video...</span>
-                                </div>
-                            </div>
-
-                            <div v-else-if="transcript || selectedTranscription" class="space-y-4">
+                        <div
+                            v-else-if="transcript || selectedTranscription"
+                            class="prose prose-sm max-w-none"
+                        >
+                            <div v-if="selectedTranscription" class="space-y-3">
                                 <!-- Status and metadata -->
-                                <div v-if="selectedTranscription" class="pb-3 border-b border-gray-200">
-                                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                                <div class="pb-3 border-b border-gray-200">
+                                    <div class="flex items-center gap-2 text-xs text-gray-600 mb-2">
                                         <span class="font-medium">Status:</span>
-                                        <span class="px-2 py-0.5 rounded text-xs font-medium"
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                                             :class="{
                                                 'bg-yellow-100 text-yellow-800': selectedTranscription.status === 'pending',
                                                 'bg-blue-100 text-blue-800': selectedTranscription.status === 'processing',
@@ -148,28 +193,38 @@
                                         >
                                             {{ selectedTranscription.status }}
                                         </span>
+                                        <span v-if="selectedTranscription.completedAt" class="ml-auto">
+                                            Completed: {{ formatDate(selectedTranscription.completedAt) }}
+                                        </span>
                                     </div>
                                     
-                                    <div v-if="selectedTranscription.prediction?.usage" class="text-sm text-gray-600 mt-1">
-                                        <span class="font-medium">Credits:</span> 
+                                    <!-- Usage info if available -->
+                                    <div v-if="selectedTranscription.prediction?.usage" class="text-xs text-gray-600">
+                                        <span class="font-medium">Credits used:</span> 
                                         {{ selectedTranscription.prediction.usage.credits_used || 0 }}
+                                        <span v-if="selectedTranscription.prediction.usage.elements_processed" class="ml-3">
+                                            <span class="font-medium">Elements:</span> 
+                                            {{ selectedTranscription.prediction.usage.elements_processed }}
+                                            {{ selectedTranscription.prediction.usage.element_type }}
+                                        </span>
                                     </div>
                                 </div>
                                 
                                 <!-- Transcript content -->
-                                <div v-if="transcript">
-                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Transcript:</h4>
-                                    <div class="bg-gray-50 p-4 rounded max-h-96 overflow-y-auto">
-                                        <p class="text-sm whitespace-pre-wrap break-words">{{ transcript }}</p>
+                                <div v-if="transcript" class="space-y-2">
+                                    <h4 class="text-sm font-medium text-gray-700">Transcript:</h4>
+                                    <div class="whitespace-pre-wrap text-sm sm:text-base max-h-72 overflow-y-auto bg-gray-50 p-3 rounded break-words">
+                                        {{ transcript }}
                                     </div>
                                 </div>
                                 
-                                <!-- Full response data -->
-                                <details v-if="selectedTranscription?.prediction?.response || selectedTranscription?.fullResponse" class="mt-4">
+                                <!-- Full response data (collapsible) -->
+                                <details v-if="selectedTranscription.prediction?.response || selectedTranscription.fullResponse" 
+                                         class="mt-4">
                                     <summary class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
                                         View Full Response Data
                                     </summary>
-                                    <pre class="mt-2 text-xs bg-gray-100 p-3 rounded overflow-auto max-h-64">{{ 
+                                    <pre class="mt-2 text-xs bg-gray-100 p-3 rounded overflow-x-auto max-h-64 whitespace-pre-wrap break-all">{{ 
                                         JSON.stringify(
                                             selectedTranscription.prediction?.response || selectedTranscription.fullResponse, 
                                             null, 
@@ -178,31 +233,38 @@
                                     }}</pre>
                                 </details>
                             </div>
+                        </div>
 
-                            <div v-if="error" class="mt-4 p-4 bg-red-50 border border-red-200 rounded">
-                                <p class="text-red-600 text-sm">{{ error }}</p>
+                        <div
+                            v-if="error"
+                            class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg"
+                        >
+                            <p class="text-red-600 text-xs sm:text-sm">{{ error }}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Transcription History Column -->
+                <Card class="lg:col-span-2 max-h-[600px] flex flex-col">
+                    <CardHeader class="flex-shrink-0">
+                        <CardTitle>
+                            <div class="flex justify-between items-center flex-wrap gap-2">
+                                <span>Transcription History</span>
+                                <Button
+                                    @click="loadTranscriptions"
+                                    variant="outline"
+                                    size="sm"
+                                    class="h-8 px-3 flex items-center gap-1"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    <span>Refresh</span>
+                                </Button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Transcription History -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div class="p-4 border-b border-gray-200">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-lg font-semibold">Transcription History</h2>
-                            <button
-                                @click="loadTranscriptions"
-                                class="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Refresh
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-4 max-h-96 overflow-y-auto">
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent class="flex-1 overflow-y-auto lg:max-h-none">
                         <div v-if="transcriptions.length === 0" class="text-gray-500 text-center py-8">
                             No transcription history yet.
                         </div>
@@ -211,15 +273,14 @@
                                 v-for="trans in transcriptions" 
                                 :key="trans.jobId"
                                 @click="selectTranscription(trans)"
-                                class="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                class="p-3 sm:p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                                 :class="{
-                                    'border-blue-500 bg-blue-50': selectedTranscription?.jobId === trans.jobId,
-                                    'border-gray-200': selectedTranscription?.jobId !== trans.jobId
+                                    'border-blue-500 bg-blue-50': selectedTranscription?.jobId === trans.jobId
                                 }"
                             >
                                 <div class="flex justify-between items-start">
                                     <div class="flex-1">
-                                        <p class="font-medium text-sm">
+                                        <p class="font-medium text-xs sm:text-sm">
                                             {{ formatDate(trans.createdAt) }}
                                         </p>
                                         <p class="text-sm mt-1">
@@ -234,18 +295,18 @@
                                                 {{ trans.status }}
                                             </span>
                                         </p>
-                                        <p v-if="trans.transcript" class="text-sm text-gray-600 mt-2 line-clamp-2">
+                                        <p v-if="trans.transcript" class="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2 break-words">
                                             {{ trans.transcript }}
                                         </p>
-                                        <p v-else-if="trans.error" class="text-sm text-red-600 mt-2">
+                                        <p v-else-if="trans.error" class="text-xs sm:text-sm text-red-600 mt-2">
                                             {{ trans.error }}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     </div>
@@ -253,6 +314,11 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted, onMounted } from 'vue'
+import Card from '~/components/ui/card/Card.vue'
+import CardHeader from '~/components/ui/card/CardHeader.vue'
+import CardTitle from '~/components/ui/card/CardTitle.vue'
+import CardContent from '~/components/ui/card/CardContent.vue'
+import Button from '~/components/ui/button/Button.vue'
 
 interface Transcription {
     jobId: string
@@ -538,12 +604,3 @@ const formatDate = (dateString: string | undefined) => {
     })
 }
 </script>
-
-<style scoped>
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-</style>

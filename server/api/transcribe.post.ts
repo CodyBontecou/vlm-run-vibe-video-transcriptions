@@ -70,11 +70,27 @@ export default defineEventHandler(async (event) => {
       
       console.log('File uploaded successfully:', uploadedFile.id)
 
+      // Get the base URL for the callback
+      let callbackUrl: string | undefined
+      
+      // Check if we have a custom callback URL (e.g., from ngrok)
+      if (process.env.CALLBACK_BASE_URL) {
+        callbackUrl = `${process.env.CALLBACK_BASE_URL}/api/transcription-callback?jobId=${jobId}`
+        console.log('Using custom callback URL:', callbackUrl)
+      } else {
+        // Fall back to constructing from request if no custom URL provided
+        const host = getRequestHost(event)
+        const protocol = getRequestProtocol(event)
+        callbackUrl = `${protocol}://${host}/api/transcription-callback?jobId=${jobId}`
+        console.log('Using request-based callback URL:', callbackUrl)
+      }
+
       // Submit the video for transcription
       const prediction = await client.video.generate({
         fileId: uploadedFile.id,
         domain: 'video.transcription',
-        batch: true
+        batch: true,
+        callbackUrl
       })
       
       console.log('Transcription job started:', prediction.id)

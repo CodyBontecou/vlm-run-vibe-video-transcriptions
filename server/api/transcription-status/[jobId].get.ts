@@ -21,6 +21,9 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // POLLING LOGIC COMMENTED OUT FOR CALLBACK TESTING
+    // Uncomment this block to enable polling as a fallback mechanism
+    /*
     // If we have a prediction ID and status is not completed/error, poll vlm.run API
     if (transcriptionData.predictionId && 
         transcriptionData.status !== 'completed' && 
@@ -95,6 +98,7 @@ export default defineEventHandler(async (event) => {
         // Continue with local data
       }
     }
+    */
 
     // If status is error, include the error message
     if (transcriptionData.status === 'error') {
