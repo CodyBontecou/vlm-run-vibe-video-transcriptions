@@ -124,9 +124,6 @@
                                     <p class="text-sm text-gray-500">
                                         Supported formats: MP4, MOV, AVI, WebM
                                     </p>
-                                    <p class="text-xs text-gray-400">
-                                        Maximum file size: 4.5MB (Vercel Hobby) / 100MB (Vercel Pro)
-                                    </p>
                                 </div>
 
                                 <div v-else class="space-y-3">
@@ -594,12 +591,6 @@ const handleDrop = (e: DragEvent) => {
     if (files && files.length > 0) {
         const file = files[0]
         if (file.type.startsWith('video/')) {
-            // Check file size (4.5MB limit for Vercel Hobby, 100MB for Pro)
-            const maxSize = 4.5 * 1024 * 1024 // 4.5MB for Vercel Hobby
-            if (file.size > maxSize) {
-                error.value = `Video file too large. Maximum size is 4.5MB on Vercel Hobby plan (100MB on Pro), your file is ${Math.round(file.size / 1024 / 1024)}MB`
-                return
-            }
             videoFile.value = file
             error.value = ''
         } else {
@@ -618,12 +609,6 @@ const handleFileSelect = (e: Event) => {
     if (files && files.length > 0) {
         const file = files[0]
         if (file.type.startsWith('video/')) {
-            // Check file size (4.5MB limit for Vercel Hobby, 100MB for Pro)
-            const maxSize = 4.5 * 1024 * 1024 // 4.5MB for Vercel Hobby
-            if (file.size > maxSize) {
-                error.value = `Video file too large. Maximum size is 4.5MB on Vercel Hobby plan (100MB on Pro), your file is ${Math.round(file.size / 1024 / 1024)}MB`
-                return
-            }
             videoFile.value = file
             error.value = ''
         } else {
@@ -655,67 +640,152 @@ const transcribeVideo = async () => {
     error.value = ''
     transcript.value = ''
 
+    const { uploadFile, transcribeVideo: submitTranscription } = useVlmRunClient()
+
     try {
-        const formData = new FormData()
-        formData.append('video', videoFile.value)
+        // Step 1: Upload the video file directly to VLM Run
+        console.log('Uploading video file...')
+        const uploadResponse: any = await uploadFile(videoFile.value)
+        const fileId = uploadResponse.id
 
-        const response = await $fetch<{
-            jobId: string
-            status: string
-            message: string
-        }>('/api/transcribe', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'x-api-key': apiKey.value || '',
-            },
-        })
+        console.log('File uploaded successfully:', fileId)
 
-        currentJobId.value = response.jobId
+        // Step 2: Submit for transcription
+        // For now, we'll skip the callback URL since we're going client-side
+        const predictionResponse: any = await submitTranscription(fileId)
+        
+        console.log('Transcription job started:', predictionResponse.id)
 
-        // POLLING COMMENTED OUT FOR CALLBACK TESTING
-        // Uncomment this line to enable client-side polling
-        // startPolling()
+        // Create a job ID for tracking
+        currentJobId.value = predictionResponse.id
+
+        // Save initial processing status
+        try {
+            await $fetch(`/api/transcriptions/${predictionResponse.id}`, {
+                method: 'POST',
+                headers: {
+                    'x-api-key': apiKey.value || '',
+                },
+                body: {
+                    status: 'processing',
+                    prediction: predictionResponse
+                }
+            })
+        } catch (saveErr) {
+            console.error('Failed to save initial status:', saveErr)
+        }
+
+        // Start polling for status
+        startPollingVlmRun(predictionResponse.id)
 
         // Reload transcriptions to show the new one
         await loadTranscriptions()
 
         // Start refreshing transcription list while processing
         startTranscriptionRefresh()
-    } catch (err) {
-        error.value =
-            'Failed to submit video for transcription. Please try again.'
-        console.error(err)
-        isTranscribing.value = false
+    } catch (err: any) {
+        console.error('Direct upload error:', err)
+        
+        // If CORS error, fall back to server-side upload
+        if (err.message?.includes('CORS')) {
+            console.log('Falling back to server-side upload due to CORS restrictions')
+            
+            try {
+                const formData = new FormData()
+                formData.append('video', videoFile.value)
+
+                const response = await $fetch<{
+                    jobId: string
+                    status: string
+                    message: string
+                }>('/api/transcribe', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'x-api-key': apiKey.value || '',
+                    },
+                })
+
+                currentJobId.value = response.jobId
+
+                // Reload transcriptions to show the new one
+                await loadTranscriptions()
+
+                // Start refreshing transcription list while processing
+                startTranscriptionRefresh()
+            } catch (fallbackErr) {
+                error.value = 'Failed to submit video for transcription. Please try again.'
+                console.error(fallbackErr)
+                isTranscribing.value = false
+            }
+        } else {
+            error.value = err.message || 'Failed to submit video for transcription. Please try again.'
+            isTranscribing.value = false
+        }
     }
 }
 
-const startPolling = () => {
+const startPollingVlmRun = (predictionId: string) => {
+    const { checkPredictionStatus } = useVlmRunClient()
+    
     if (pollInterval) {
         clearInterval(pollInterval)
     }
 
     pollInterval = setInterval(async () => {
-        if (!currentJobId.value) return
-
         try {
-            const status = await $fetch<{
-                status: string
-                transcript?: string
-                error?: string
-            }>(`/api/transcription-status/${currentJobId.value}`)
+            const prediction: any = await checkPredictionStatus(predictionId)
 
-            if (status.status === 'completed' && status.transcript) {
-                transcript.value = status.transcript
+            if (prediction.status === 'completed' && prediction.response?.segments) {
+                // Extract transcript from segments
+                transcript.value = prediction.response.segments
+                    .map((segment: any) => segment.audio?.content || '')
+                    .filter((text: string) => text.length > 0)
+                    .join(' ')
+                
                 isTranscribing.value = false
                 stopPolling()
+
+                // Save transcription to server for history tracking
+                try {
+                    await $fetch(`/api/transcriptions/${predictionId}`, {
+                        method: 'POST',
+                        headers: {
+                            'x-api-key': apiKey.value || '',
+                        },
+                        body: {
+                            status: 'completed',
+                            transcript: transcript.value,
+                            prediction: prediction
+                        }
+                    })
+                } catch (saveErr) {
+                    console.error('Failed to save transcription:', saveErr)
+                }
 
                 // Reload transcriptions to update status
                 await loadTranscriptions()
-            } else if (status.status === 'error') {
-                error.value = status.error || 'Transcription failed'
+            } else if (prediction.status === 'error') {
+                error.value = prediction.error || 'Transcription failed'
                 isTranscribing.value = false
                 stopPolling()
+
+                // Save error status to server
+                try {
+                    await $fetch(`/api/transcriptions/${predictionId}`, {
+                        method: 'POST',
+                        headers: {
+                            'x-api-key': apiKey.value || '',
+                        },
+                        body: {
+                            status: 'error',
+                            error: error.value,
+                            prediction: prediction
+                        }
+                    })
+                } catch (saveErr) {
+                    console.error('Failed to save error status:', saveErr)
+                }
             }
         } catch (err) {
             console.error('Polling error:', err)
