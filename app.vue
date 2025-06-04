@@ -5,12 +5,80 @@
                 Video Transcription
             </h1>
 
+            <!-- API Key Section -->
+            <div
+                v-if="!hasApiKey"
+                class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6"
+            >
+                <h2 class="text-lg font-semibold mb-2">
+                    VLM Run API Key Required
+                </h2>
+                <p class="text-sm text-gray-600 mb-3">
+                    To use this application, you need a VLM Run API key.
+                    <a
+                        href="https://app.vlm.run/dashboard"
+                        target="_blank"
+                        class="text-blue-600 hover:text-blue-800 underline"
+                        >Get your API key here</a
+                    >
+                </p>
+                <div class="flex gap-2">
+                    <input
+                        v-model="apiKeyInput"
+                        type="password"
+                        placeholder="Enter your VLM Run API key"
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        @keyup.enter="saveApiKey"
+                    />
+                    <button
+                        @click="saveApiKey"
+                        :disabled="!apiKeyInput"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        Save Key
+                    </button>
+                </div>
+            </div>
+
+            <!-- API Key Info (when saved) -->
+            <div
+                v-else
+                class="bg-green-50 border border-green-200 rounded-lg p-3 mb-6 flex justify-between items-center"
+            >
+                <div class="flex items-center gap-2">
+                    <svg
+                        class="w-5 h-5 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                    </svg>
+                    <span class="text-sm text-green-800"
+                        >API Key configured</span
+                    >
+                </div>
+                <button
+                    @click="clearApiKey"
+                    class="text-sm text-red-600 hover:text-red-800"
+                >
+                    Remove Key
+                </button>
+            </div>
+
             <!-- Main content area -->
-            <div class="space-y-6">
+            <div class="space-y-6" v-if="hasApiKey">
                 <!-- Top row: Upload and Transcript -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Video Upload Card -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div
+                        class="bg-white rounded-lg shadow-sm border border-gray-200"
+                    >
                         <div class="p-4 border-b border-gray-200">
                             <h2 class="text-lg font-semibold">Upload Video</h2>
                         </div>
@@ -59,7 +127,9 @@
                                 </div>
 
                                 <div v-else class="space-y-3">
-                                    <p class="text-base text-gray-700 font-medium break-all">
+                                    <p
+                                        class="text-base text-gray-700 font-medium break-all"
+                                    >
                                         {{ videoFile.name }}
                                     </p>
                                     <p class="text-sm text-gray-500">
@@ -79,12 +149,35 @@
                                     @click="transcribeVideo"
                                     :disabled="isTranscribing"
                                     class="w-full px-4 py-2 text-white rounded-md transition-colors"
-                                    :class="isTranscribing ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800'"
+                                    :class="
+                                        isTranscribing
+                                            ? 'bg-gray-400 cursor-not-allowed'
+                                            : 'bg-gray-900 hover:bg-gray-800'
+                                    "
                                 >
-                                    <span v-if="isTranscribing" class="flex items-center justify-center">
-                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <span
+                                        v-if="isTranscribing"
+                                        class="flex items-center justify-center"
+                                    >
+                                        <svg
+                                            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                class="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                stroke-width="4"
+                                            ></circle>
+                                            <path
+                                                class="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
                                         </svg>
                                         Transcribing...
                                     </span>
@@ -95,13 +188,24 @@
                     </div>
 
                     <!-- Transcript Card -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div
+                        class="bg-white rounded-lg shadow-sm border border-gray-200"
+                    >
                         <div class="p-4 border-b border-gray-200">
                             <div class="flex justify-between items-center">
-                                <h2 class="text-lg font-semibold">Transcript</h2>
-                                <div v-if="selectedTranscription" class="flex items-center gap-2">
+                                <h2 class="text-lg font-semibold">
+                                    Transcript
+                                </h2>
+                                <div
+                                    v-if="selectedTranscription"
+                                    class="flex items-center gap-2"
+                                >
                                     <span class="text-sm text-gray-500">
-                                        {{ formatDate(selectedTranscription.createdAt) }}
+                                        {{
+                                            formatDate(
+                                                selectedTranscription.createdAt
+                                            )
+                                        }}
                                     </span>
                                     <button
                                         @click="clearSelection"
@@ -114,10 +218,45 @@
                         </div>
                         <div class="p-4">
                             <div
-                                v-if="!transcript && !isTranscribing && !selectedTranscription"
+                                v-if="
+                                    !transcript &&
+                                    !isTranscribing &&
+                                    !selectedTranscription &&
+                                    !isLoadingTranscriptionDetails
+                                "
                                 class="text-gray-500 text-center py-8"
                             >
-                                No transcript yet. Upload a video and click "Transcribe Video" to generate.
+                                No transcript yet. Upload a video and click
+                                "Transcribe Video" to generate.
+                            </div>
+
+                            <div
+                                v-else-if="isLoadingTranscriptionDetails"
+                                class="text-center py-8"
+                            >
+                                <div class="inline-flex items-center space-x-2">
+                                    <svg
+                                        class="animate-spin h-5 w-5 text-gray-600"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle
+                                            class="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            stroke-width="4"
+                                        ></circle>
+                                        <path
+                                            class="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                        ></path>
+                                    </svg>
+                                    <span class="text-gray-600">Loading transcript details...</span>
+                                </div>
                             </div>
 
                             <div
@@ -125,61 +264,134 @@
                                 class="text-center py-8"
                             >
                                 <div class="inline-flex items-center space-x-2">
-                                    <svg class="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <svg
+                                        class="animate-spin h-5 w-5 text-gray-600"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle
+                                            class="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            stroke-width="4"
+                                        ></circle>
+                                        <path
+                                            class="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                        ></path>
                                     </svg>
-                                    <span class="text-gray-600">Processing video...</span>
+                                    <span class="text-gray-600"
+                                        >Processing video...</span
+                                    >
                                 </div>
                             </div>
 
-                            <div v-else-if="transcript || selectedTranscription" class="space-y-4">
+                            <div
+                                v-else-if="transcript || selectedTranscription"
+                                class="space-y-4"
+                            >
                                 <!-- Status and metadata -->
-                                <div v-if="selectedTranscription" class="pb-3 border-b border-gray-200">
-                                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                                <div
+                                    v-if="selectedTranscription"
+                                    class="pb-3 border-b border-gray-200"
+                                >
+                                    <div
+                                        class="flex items-center gap-2 text-sm text-gray-600"
+                                    >
                                         <span class="font-medium">Status:</span>
-                                        <span class="px-2 py-0.5 rounded text-xs font-medium"
+                                        <span
+                                            class="px-2 py-0.5 rounded text-xs font-medium"
                                             :class="{
-                                                'bg-yellow-100 text-yellow-800': selectedTranscription.status === 'pending',
-                                                'bg-blue-100 text-blue-800': selectedTranscription.status === 'processing',
-                                                'bg-green-100 text-green-800': selectedTranscription.status === 'completed',
-                                                'bg-red-100 text-red-800': selectedTranscription.status === 'error'
+                                                'bg-yellow-100 text-yellow-800':
+                                                    selectedTranscription.status ===
+                                                    'pending',
+                                                'bg-blue-100 text-blue-800':
+                                                    selectedTranscription.status ===
+                                                    'processing',
+                                                'bg-green-100 text-green-800':
+                                                    selectedTranscription.status ===
+                                                    'completed',
+                                                'bg-red-100 text-red-800':
+                                                    selectedTranscription.status ===
+                                                    'error',
                                             }"
                                         >
                                             {{ selectedTranscription.status }}
                                         </span>
                                     </div>
-                                    
-                                    <div v-if="selectedTranscription.prediction?.usage" class="text-sm text-gray-600 mt-1">
-                                        <span class="font-medium">Credits:</span> 
-                                        {{ selectedTranscription.prediction.usage.credits_used || 0 }}
+
+                                    <div
+                                        v-if="
+                                            selectedTranscription.prediction
+                                                ?.usage
+                                        "
+                                        class="text-sm text-gray-600 mt-1"
+                                    >
+                                        <span class="font-medium"
+                                            >Credits:</span
+                                        >
+                                        {{
+                                            selectedTranscription.prediction
+                                                .usage.credits_used || 0
+                                        }}
                                     </div>
                                 </div>
-                                
+
                                 <!-- Transcript content -->
                                 <div v-if="transcript">
-                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Transcript:</h4>
-                                    <div class="bg-gray-50 p-4 rounded max-h-96 overflow-y-auto">
-                                        <p class="text-sm whitespace-pre-wrap break-words">{{ transcript }}</p>
+                                    <h4
+                                        class="text-sm font-medium text-gray-700 mb-2"
+                                    >
+                                        Transcript:
+                                    </h4>
+                                    <div
+                                        class="bg-gray-50 p-4 rounded max-h-96 overflow-y-auto"
+                                    >
+                                        <p
+                                            class="text-sm whitespace-pre-wrap break-words"
+                                        >
+                                            {{ transcript }}
+                                        </p>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Full response data -->
-                                <details v-if="selectedTranscription?.prediction?.response || selectedTranscription?.fullResponse" class="mt-4">
-                                    <summary class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                                <details
+                                    v-if="
+                                        selectedTranscription?.prediction
+                                            ?.response ||
+                                        selectedTranscription?.fullResponse
+                                    "
+                                    class="mt-4"
+                                >
+                                    <summary
+                                        class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900"
+                                    >
                                         View Full Response Data
                                     </summary>
-                                    <pre class="mt-2 text-xs bg-gray-100 p-3 rounded overflow-auto max-h-64">{{ 
-                                        JSON.stringify(
-                                            selectedTranscription.prediction?.response || selectedTranscription.fullResponse, 
-                                            null, 
-                                            2
-                                        ) 
-                                    }}</pre>
+                                    <pre
+                                        class="mt-2 text-xs bg-gray-100 p-3 rounded overflow-auto max-h-64"
+                                        >{{
+                                            JSON.stringify(
+                                                selectedTranscription.prediction
+                                                    ?.response ||
+                                                    selectedTranscription.fullResponse,
+                                                null,
+                                                2
+                                            )
+                                        }}</pre
+                                    >
                                 </details>
                             </div>
 
-                            <div v-if="error" class="mt-4 p-4 bg-red-50 border border-red-200 rounded">
+                            <div
+                                v-if="error"
+                                class="mt-4 p-4 bg-red-50 border border-red-200 rounded"
+                            >
                                 <p class="text-red-600 text-sm">{{ error }}</p>
                             </div>
                         </div>
@@ -187,34 +399,88 @@
                 </div>
 
                 <!-- Transcription History -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-200"
+                >
                     <div class="p-4 border-b border-gray-200">
                         <div class="flex justify-between items-center">
-                            <h2 class="text-lg font-semibold">Transcription History</h2>
+                            <h2 class="text-lg font-semibold">
+                                Transcription History
+                            </h2>
                             <button
                                 @click="loadTranscriptions"
-                                class="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                                :disabled="isLoadingHistory"
+                                class="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-4 w-4"
+                                    :class="{ 'animate-spin': isLoadingHistory }"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                    />
                                 </svg>
-                                Refresh
+                                {{ isLoadingHistory ? 'Loading...' : 'Refresh' }}
                             </button>
                         </div>
                     </div>
                     <div class="p-4 max-h-96 overflow-y-auto">
-                        <div v-if="transcriptions.length === 0" class="text-gray-500 text-center py-8">
+                        <div
+                            v-if="isLoadingHistory && transcriptions.length === 0"
+                            class="text-center py-8"
+                        >
+                            <div class="inline-flex items-center space-x-2">
+                                <svg
+                                    class="animate-spin h-5 w-5 text-gray-600"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    ></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                <span class="text-gray-600">Loading transcriptions...</span>
+                            </div>
+                        </div>
+                        <div
+                            v-else-if="!isLoadingHistory && transcriptions.length === 0"
+                            class="text-gray-500 text-center py-8"
+                        >
                             No transcription history yet.
                         </div>
                         <div v-else class="space-y-3">
-                            <div 
-                                v-for="trans in transcriptions" 
+                            <div
+                                v-for="trans in transcriptions"
                                 :key="trans.jobId"
                                 @click="selectTranscription(trans)"
-                                class="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                class="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors relative"
                                 :class="{
-                                    'border-blue-500 bg-blue-50': selectedTranscription?.jobId === trans.jobId,
-                                    'border-gray-200': selectedTranscription?.jobId !== trans.jobId
+                                    'border-blue-500 bg-blue-50':
+                                        selectedTranscription?.jobId ===
+                                        trans.jobId,
+                                    'border-gray-200':
+                                        selectedTranscription?.jobId !==
+                                        trans.jobId,
+                                    'opacity-75 pointer-events-none':
+                                        isLoadingTranscriptionDetails
                                 }"
                             >
                                 <div class="flex justify-between items-start">
@@ -223,21 +489,36 @@
                                             {{ formatDate(trans.createdAt) }}
                                         </p>
                                         <p class="text-sm mt-1">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                                                 :class="{
-                                                    'bg-yellow-100 text-yellow-800': trans.status === 'pending',
-                                                    'bg-blue-100 text-blue-800': trans.status === 'processing',
-                                                    'bg-green-100 text-green-800': trans.status === 'completed',
-                                                    'bg-red-100 text-red-800': trans.status === 'error'
+                                                    'bg-yellow-100 text-yellow-800':
+                                                        trans.status ===
+                                                        'pending',
+                                                    'bg-blue-100 text-blue-800':
+                                                        trans.status ===
+                                                        'processing',
+                                                    'bg-green-100 text-green-800':
+                                                        trans.status ===
+                                                        'completed',
+                                                    'bg-red-100 text-red-800':
+                                                        trans.status ===
+                                                        'error',
                                                 }"
                                             >
                                                 {{ trans.status }}
                                             </span>
                                         </p>
-                                        <p v-if="trans.transcript" class="text-sm text-gray-600 mt-2 line-clamp-2">
+                                        <p
+                                            v-if="trans.transcript"
+                                            class="text-sm text-gray-600 mt-2 line-clamp-2"
+                                        >
                                             {{ trans.transcript }}
                                         </p>
-                                        <p v-else-if="trans.error" class="text-sm text-red-600 mt-2">
+                                        <p
+                                            v-else-if="trans.error"
+                                            class="text-sm text-red-600 mt-2"
+                                        >
                                             {{ trans.error }}
                                         </p>
                                     </div>
@@ -252,7 +533,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, onMounted } from 'vue'
+import { ref, onUnmounted, onMounted, watch } from 'vue'
+
+// API Key management
+const { apiKey, setApiKey, clearApiKey: removeApiKey, hasApiKey } = useApiKey()
+const apiKeyInput = ref('')
+
+const saveApiKey = () => {
+    if (apiKeyInput.value.trim()) {
+        setApiKey(apiKeyInput.value.trim())
+        apiKeyInput.value = ''
+    }
+}
+
+const clearApiKey = () => {
+    removeApiKey()
+}
 
 interface Transcription {
     jobId: string
@@ -284,6 +580,8 @@ const error = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const transcriptions = ref<Transcription[]>([])
 const selectedTranscription = ref<Transcription | null>(null)
+const isLoadingHistory = ref(false)
+const isLoadingTranscriptionDetails = ref(false)
 
 const handleDrop = (e: DragEvent) => {
     e.preventDefault()
@@ -353,6 +651,9 @@ const transcribeVideo = async () => {
         }>('/api/transcribe', {
             method: 'POST',
             body: formData,
+            headers: {
+                'x-api-key': apiKey.value || '',
+            },
         })
 
         currentJobId.value = response.jobId
@@ -360,10 +661,10 @@ const transcribeVideo = async () => {
         // POLLING COMMENTED OUT FOR CALLBACK TESTING
         // Uncomment this line to enable client-side polling
         // startPolling()
-        
+
         // Reload transcriptions to show the new one
         await loadTranscriptions()
-        
+
         // Start refreshing transcription list while processing
         startTranscriptionRefresh()
     } catch (err) {
@@ -393,7 +694,7 @@ const startPolling = () => {
                 transcript.value = status.transcript
                 isTranscribing.value = false
                 stopPolling()
-                
+
                 // Reload transcriptions to update status
                 await loadTranscriptions()
             } else if (status.status === 'error') {
@@ -429,16 +730,16 @@ const startTranscriptionRefresh = () => {
     if (refreshInterval) {
         clearInterval(refreshInterval)
     }
-    
+
     // Refresh every 5 seconds to check for callback updates
     refreshInterval = setInterval(async () => {
         await loadTranscriptions()
-        
+
         // Check if we still have any processing transcriptions
         const hasProcessing = transcriptions.value.some(
             t => t.status === 'processing' || t.status === 'pending'
         )
-        
+
         // Stop refreshing if no transcriptions are processing
         if (!hasProcessing) {
             stopTranscriptionRefresh()
@@ -456,15 +757,28 @@ const stopTranscriptionRefresh = () => {
 
 // Load transcriptions on mount
 onMounted(async () => {
-    await loadTranscriptions()
-    
-    // Check if any transcriptions are processing on mount
-    const hasProcessing = transcriptions.value.some(
-        t => t.status === 'processing' || t.status === 'pending'
-    )
-    
-    if (hasProcessing) {
-        startTranscriptionRefresh()
+    if (hasApiKey.value) {
+        await loadTranscriptions()
+
+        // Check if any transcriptions are processing on mount
+        const hasProcessing = transcriptions.value.some(
+            t => t.status === 'processing' || t.status === 'pending'
+        )
+
+        if (hasProcessing) {
+            startTranscriptionRefresh()
+        }
+    }
+})
+
+// Watch for API key changes
+watch(hasApiKey, async newValue => {
+    if (newValue) {
+        await loadTranscriptions()
+    } else {
+        transcriptions.value = []
+        selectedTranscription.value = null
+        transcript.value = ''
     }
 })
 
@@ -474,21 +788,36 @@ onUnmounted(() => {
 })
 
 const loadTranscriptions = async () => {
+    isLoadingHistory.value = true
     try {
-        const data = await $fetch<Transcription[]>('/api/transcriptions')
+        const data = await $fetch<Transcription[]>('/api/transcriptions', {
+            headers: {
+                'x-api-key': apiKey.value || '',
+            },
+        })
         transcriptions.value = data
     } catch (err) {
         console.error('Failed to load transcriptions:', err)
+    } finally {
+        isLoadingHistory.value = false
     }
 }
 
 const selectTranscription = async (transcription: Transcription) => {
+    isLoadingTranscriptionDetails.value = true
     try {
         // Fetch full transcription details
-        const fullData = await $fetch(`/api/transcription/${transcription.jobId}`)
-        
+        const fullData = await $fetch(
+            `/api/transcription/${transcription.jobId}`,
+            {
+                headers: {
+                    'x-api-key': apiKey.value || '',
+                },
+            }
+        )
+
         selectedTranscription.value = fullData
-        
+
         // Extract transcript based on the response structure
         if (fullData.transcript) {
             transcript.value = fullData.transcript
@@ -507,9 +836,9 @@ const selectTranscription = async (transcription: Transcription) => {
         } else {
             transcript.value = ''
         }
-        
+
         error.value = fullData.error || ''
-        
+
         // Clear the transcribing state when selecting a transcription
         isTranscribing.value = false
         // Clear video file to show the transcript
@@ -517,6 +846,8 @@ const selectTranscription = async (transcription: Transcription) => {
     } catch (err) {
         console.error('Failed to fetch transcription details:', err)
         error.value = 'Failed to load transcription details'
+    } finally {
+        isLoadingTranscriptionDetails.value = false
     }
 }
 
@@ -534,7 +865,7 @@ const formatDate = (dateString: string | undefined) => {
         month: 'short',
         day: 'numeric',
         hour: 'numeric',
-        minute: '2-digit'
+        minute: '2-digit',
     })
 }
 </script>
