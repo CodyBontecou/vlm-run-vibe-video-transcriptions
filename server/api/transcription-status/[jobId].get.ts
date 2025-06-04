@@ -1,3 +1,5 @@
+import { VlmRun } from 'vlmrun'
+
 export default defineEventHandler(async (event) => {
   try {
     const jobId = getRouterParam(event, 'jobId')
@@ -17,6 +19,81 @@ export default defineEventHandler(async (event) => {
         statusCode: 404,
         statusMessage: 'Transcription job not found'
       })
+    }
+
+    // If we have a prediction ID and status is not completed/error, poll vlm.run API
+    if (transcriptionData.predictionId && 
+        transcriptionData.status !== 'completed' && 
+        transcriptionData.status !== 'error') {
+      
+      const apiKey = process.env.VLMRUN_API_KEY
+      if (!apiKey) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: 'VLM Run API key not configured'
+        })
+      }
+
+      try {
+        const client = new VlmRun({ apiKey })
+        const prediction = await client.predictions.get(transcriptionData.predictionId)
+        
+        console.log(`Polling prediction ${transcriptionData.predictionId}, status: ${prediction.status}`)
+        
+        // Update local storage based on prediction status
+        if (prediction.status === 'completed' && prediction.response) {
+          let transcript = ''
+          
+          // Extract transcript from the response
+          if (prediction.response.segments && Array.isArray(prediction.response.segments)) {
+            transcript = prediction.response.segments
+              .map((segment: any) => segment.audio?.content || '')
+              .filter((text: string) => text.length > 0)
+              .join(' ')
+          } else if (typeof prediction.response === 'string') {
+            transcript = prediction.response
+          }
+          
+          const updatedData = {
+            ...transcriptionData,
+            status: 'completed',
+            transcript,
+            completedAt: prediction.completed_at || new Date().toISOString(),
+            fullResponse: prediction.response
+          }
+          
+          await storage.setItem(`transcription:${jobId}`, updatedData)
+          return updatedData
+          
+        } else if (prediction.status === 'failed') {
+          const updatedData = {
+            ...transcriptionData,
+            status: 'error',
+            error: prediction.message || 'Transcription failed',
+            completedAt: prediction.completed_at || new Date().toISOString()
+          }
+          
+          await storage.setItem(`transcription:${jobId}`, updatedData)
+          return updatedData
+          
+        } else {
+          // Update status if changed
+          if (transcriptionData.status !== prediction.status) {
+            await storage.setItem(`transcription:${jobId}`, {
+              ...transcriptionData,
+              status: prediction.status
+            })
+          }
+          
+          return {
+            ...transcriptionData,
+            status: prediction.status
+          }
+        }
+      } catch (vlmError: any) {
+        console.error('Failed to poll vlm.run API:', vlmError)
+        // Continue with local data
+      }
     }
 
     // If status is error, include the error message

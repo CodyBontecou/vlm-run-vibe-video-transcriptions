@@ -70,17 +70,11 @@ export default defineEventHandler(async (event) => {
       
       console.log('File uploaded successfully:', uploadedFile.id)
 
-      // Get the base URL for the callback
-      const host = getRequestHost(event)
-      const protocol = getRequestProtocol(event)
-      const callbackUrl = `${protocol}://${host}/api/transcription-callback?jobId=${jobId}`
-
       // Submit the video for transcription
       const prediction = await client.video.generate({
         fileId: uploadedFile.id,
         domain: 'video.transcription',
-        batch: true,
-        callbackUrl
+        batch: true
       })
       
       console.log('Transcription job started:', prediction.id)

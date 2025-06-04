@@ -370,7 +370,7 @@ const startPolling = () => {
             console.error('Polling error:', err)
             // Don't stop polling on network errors
         }
-    }, 2000) // Poll every 2 seconds
+    }, 5000) // Poll every 5 seconds
 }
 
 const stopPolling = () => {
