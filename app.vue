@@ -124,6 +124,9 @@
                                     <p class="text-sm text-gray-500">
                                         Supported formats: MP4, MOV, AVI, WebM
                                     </p>
+                                    <p class="text-xs text-gray-400">
+                                        Maximum file size: 4.5MB (Vercel Hobby) / 100MB (Vercel Pro)
+                                    </p>
                                 </div>
 
                                 <div v-else class="space-y-3">
@@ -591,6 +594,12 @@ const handleDrop = (e: DragEvent) => {
     if (files && files.length > 0) {
         const file = files[0]
         if (file.type.startsWith('video/')) {
+            // Check file size (4.5MB limit for Vercel Hobby, 100MB for Pro)
+            const maxSize = 4.5 * 1024 * 1024 // 4.5MB for Vercel Hobby
+            if (file.size > maxSize) {
+                error.value = `Video file too large. Maximum size is 4.5MB on Vercel Hobby plan (100MB on Pro), your file is ${Math.round(file.size / 1024 / 1024)}MB`
+                return
+            }
             videoFile.value = file
             error.value = ''
         } else {
@@ -609,6 +618,12 @@ const handleFileSelect = (e: Event) => {
     if (files && files.length > 0) {
         const file = files[0]
         if (file.type.startsWith('video/')) {
+            // Check file size (4.5MB limit for Vercel Hobby, 100MB for Pro)
+            const maxSize = 4.5 * 1024 * 1024 // 4.5MB for Vercel Hobby
+            if (file.size > maxSize) {
+                error.value = `Video file too large. Maximum size is 4.5MB on Vercel Hobby plan (100MB on Pro), your file is ${Math.round(file.size / 1024 / 1024)}MB`
+                return
+            }
             videoFile.value = file
             error.value = ''
         } else {

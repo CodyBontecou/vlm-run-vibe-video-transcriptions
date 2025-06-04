@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/transcribe.post.ts": {
+      "maxDuration": 300
+    }
+  }
+}

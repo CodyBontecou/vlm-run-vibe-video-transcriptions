@@ -36,6 +36,15 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Check file size (4.5MB limit for Vercel Hobby, 100MB for Pro)
+    const maxSize = 4.5 * 1024 * 1024 // 4.5MB for Vercel Hobby
+    if (videoFile.data.length > maxSize) {
+      throw createError({
+        statusCode: 413,
+        statusMessage: `Video file too large. Maximum size is 4.5MB on Vercel Hobby plan (100MB on Pro), your file is ${Math.round(videoFile.data.length / 1024 / 1024)}MB`
+      })
+    }
+
     // Initialize VLM Run client
     const client = new VlmRun({ apiKey })
 
