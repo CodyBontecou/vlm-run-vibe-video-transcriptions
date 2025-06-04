@@ -1,6 +1,15 @@
 import { VlmRun } from 'vlmrun'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  // Get API key from header
+  const apiKey = getHeader(event, 'x-api-key')
+  if (!apiKey) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'API key required. Please provide your VLM Run API key.'
+    })
+  }
+  
   const storage = useStorage('fs')
   
   // Get all keys that start with 'transcription:'
@@ -18,18 +27,16 @@ export default defineEventHandler(async () => {
     })
   )
   
-  // Try to sync with vlm.run API if API key is available
+  // Try to sync with vlm.run API
   let remoteTranscriptions: any[] = []
-  const apiKey = process.env.VLMRUN_API_KEY
   
-  if (apiKey) {
-    try {
-      const client = new VlmRun({ apiKey })
-      
-      // Fetch recent predictions from vlm.run
-      const predictions = await client.predictions.list({
-        limit: 50 // Get last 50 predictions
-      })
+  try {
+    const client = new VlmRun({ apiKey })
+    
+    // Fetch recent predictions from vlm.run
+    const predictions = await client.predictions.list({
+      limit: 50 // Get last 50 predictions
+    })
       
       // Process remote predictions and update local storage
       for (const prediction of predictions || []) {
@@ -80,10 +87,9 @@ export default defineEventHandler(async () => {
           }
         }
       }
-    } catch (error) {
-      console.error('Failed to sync with vlm.run API:', error)
-      // Continue with local data only
-    }
+  } catch (error) {
+    console.error('Failed to sync with vlm.run API:', error)
+    // Continue with local data only
   }
   
   // Sort by creation date (newest first)

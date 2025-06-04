@@ -2,6 +2,15 @@ import { VlmRun } from 'vlmrun'
 
 export default defineEventHandler(async (event) => {
   try {
+    // Get API key from header
+    const apiKey = getHeader(event, 'x-api-key')
+    if (!apiKey) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'API key required. Please provide your VLM Run API key.'
+      })
+    }
+    
     const jobId = getRouterParam(event, 'jobId')
     
     if (!jobId) {

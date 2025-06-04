@@ -7,13 +7,12 @@ export default defineEventHandler(async (event) => {
   let tempFilePath: string | null = null
   
   try {
-    // Check for API key first
-    const apiKey = process.env.VLMRUN_API_KEY
+    // Get API key from header
+    const apiKey = getHeader(event, 'x-api-key')
     if (!apiKey) {
-      console.error('VLMRUN_API_KEY environment variable is not set')
       throw createError({
-        statusCode: 500,
-        statusMessage: 'VLM Run API key not configured. Please set VLMRUN_API_KEY in your .env file'
+        statusCode: 401,
+        statusMessage: 'API key required. Please provide your VLM Run API key.'
       })
     }
 

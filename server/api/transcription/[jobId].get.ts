@@ -2,6 +2,15 @@ import { VlmRun } from 'vlmrun'
 
 export default defineEventHandler(async (event) => {
   try {
+    // Get API key from header
+    const apiKey = getHeader(event, 'x-api-key')
+    if (!apiKey) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'API key required. Please provide your VLM Run API key.'
+      })
+    }
+    
     const jobId = getRouterParam(event, 'jobId')
     
     if (!jobId) {
@@ -23,28 +32,25 @@ export default defineEventHandler(async (event) => {
 
     // If we have a prediction ID, try to get full data from vlm.run
     if (transcriptionData.predictionId) {
-      const apiKey = process.env.VLMRUN_API_KEY
-      if (apiKey) {
-        try {
-          const client = new VlmRun({ apiKey })
-          const prediction = await client.predictions.get(transcriptionData.predictionId)
-          
-          // Return combined data with full response from vlm.run
-          return {
-            ...transcriptionData,
-            prediction: {
-              id: prediction.id,
-              status: prediction.status,
-              created_at: prediction.created_at,
-              completed_at: prediction.completed_at,
-              response: prediction.response,
-              usage: prediction.usage
-            }
+      try {
+        const client = new VlmRun({ apiKey })
+        const prediction = await client.predictions.get(transcriptionData.predictionId)
+        
+        // Return combined data with full response from vlm.run
+        return {
+          ...transcriptionData,
+          prediction: {
+            id: prediction.id,
+            status: prediction.status,
+            created_at: prediction.created_at,
+            completed_at: prediction.completed_at,
+            response: prediction.response,
+            usage: prediction.usage
           }
-        } catch (error) {
-          console.error('Failed to fetch prediction from vlm.run:', error)
-          // Continue with local data if API fails
         }
+      } catch (error) {
+        console.error('Failed to fetch prediction from vlm.run:', error)
+        // Continue with local data if API fails
       }
     }
 
